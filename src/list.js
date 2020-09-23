@@ -1,20 +1,12 @@
 import Table from 'cli-table3';
-import mysql from 'mysql';
 import moment from 'moment';
 import chalk from 'chalk';
-
-const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'root',
-    database: 'flights',
-    timezone: "utc ist"
-});
+import {queryDb} from './services/dbService';
 
 export async function list(args) {
     try {
 
-        var dateArg = args._[1];
+        var dateArg = args.date;
         if (!dateArg) {
             dateArg = moment().format();
         }
@@ -22,7 +14,8 @@ export async function list(args) {
         if (!date.isValid()) {
             throw new Error("Invalid date argument");
         }
-        const data = await queryFlightsByDate(moment(dateArg).format('YYYY-MM-DD'));
+        var parsedDate = moment(dateArg).format('YYYY-MM-DD');
+        const data = await queryFlightsByDate(parsedDate, args.airline, args.dest);
 
         const table = new Table({
             head: ['number', 'Flight', 'City', 'Country', 'Departure Time', 'Airline'],
@@ -47,16 +40,31 @@ export async function list(args) {
     }
 }
 
-function queryFlightsByDate(date) {
-    return new Promise((resolve, reject) => {
+function queryFlightsByDate(date, airline, destination) {
+    return new Promise(async (resolve, reject) => {
+        var q = `
+        SELECT f.FlightID, f.Source, f.Destination, co.CountryEngName, f.DepartureTime, f.DayOfWeek, a.AirLineEngName FROM flights f
+        INNER JOIN airlines a ON a.AirLineCompanyID = f.IataAirline
+        INNER JOIN cities c ON f.Destination = c.CityID
+        INNER JOIN countries co ON c.CountryID = co.CountryID
+        WHERE  DATE(f.DepartureTime) = DATE('${date}')
+        `
+        if (airline) {
+            q += `AND a.AirLineEngName LIKE '%${airline}%'`
+        }
+
+        if (destination) {
+            q += `AND (f.Destination LIKE '%${destination}%' OR co.CountryEngName LIKE '%${destination}%')`
+        }
+
         var query = `SELECT *
         FROM flights_dashboard f
         WHERE  DATE(f.DepartureTime) = DATE('${date}')`;
-        connection.query(query, (err, val) => {
-            if (err) {
-                reject(err)
-            }
-            resolve(val)
-        })
+        try {
+         var results = await queryDb(q);
+         resolve(results)
+        } catch (error) {
+            reject(error);
+        }
     })
 }

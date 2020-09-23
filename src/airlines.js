@@ -1,32 +1,35 @@
-import mysql from 'mysql';
-import moment from 'moment';
+import { queryDb } from './services/dbService';
 import chalk from 'chalk';
+import Table from 'cli-table3';
 
-const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'root',
-    database: 'flights',
-    timezone: "utc ist"
-});
 
 export async function airlines() {
     var data = await queryAirlines();
-    data.forEach((airline, index) => {        
-        console.log(chalk.yellowBright(index + 1  + ") " + airline.AirLineEngName))
+
+    const table = new Table({
+        head: ['number', 'airline'],
+        colWidths: [10, 20],
+        wordWrap: true
     });
+
+    data.forEach((airline, index) => {
+        table.push([index + 1, airline.AirLineEngName])
+    });
+
+    console.log(table.toString());
+    process.exit()
 }
 
 
 function queryAirlines() {
-    return new Promise((resolve, reject) => {
-        var query = `SELECT AirLineEngName FROM airlines
-                     ORDER BY AirLineEngName`;
-        connection.query(query, (err, val) => {
-            if (err) {
-                reject(err)
-            }
-            resolve(val)
-        })
+    return new Promise(async (resolve, reject) => {
+        try {
+            var query = `SELECT AirLineEngName FROM airlines
+            ORDER BY AirLineEngName`;
+            var results = await queryDb(query);
+            resolve(results)
+        } catch (error) {
+            reject(error)
+        }
     })
 }

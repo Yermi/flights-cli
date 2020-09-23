@@ -3,6 +3,7 @@ import { help } from './help';
 import { version } from './version';
 import { list } from './list';
 import { airlines } from './airlines';
+import { destinations } from './destinations';
 
 export async function cli(argsArray) {
     const args = minimist(argsArray.slice(2));
@@ -18,6 +19,14 @@ export async function cli(argsArray) {
 
     if (args.list) {
         cmd = 'list';
+    }
+
+    if (args.dests) {
+        cmd = 'dests';
+    }
+
+    if (args.airlines) {
+        cmd = 'airlines';
     }
 
     switch (cmd) {
@@ -37,6 +46,9 @@ export async function cli(argsArray) {
             airlines(args)
             break;
 
+        case 'dests':
+            destinations(args)
+            break;
         default:
             console.error(`"${cmd}" is not a valid command!`);
             break;
