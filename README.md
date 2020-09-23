@@ -1,10 +1,17 @@
 # flights-cli
 
 cli tool for display take off flights from database
+
+1. run ```npm install```
+2. run ```npm link```
+
+start use the cli by running the command ```flights```
+
 ```
 flights [command] <options>
   list ............... show flights for specific date or airline
   airlines ........... show list of airlines
+  dests .............. show list of destintions
   version ............ show package version
   help ............... show help menu for a command
 ```
@@ -12,7 +19,7 @@ flights [command] <options>
   
 EXAMPLE:
  ```
- flights list 2021-03-28
+ flights --list --date=2021-03-28
  ```
  
  Result:
